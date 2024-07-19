@@ -9,6 +9,7 @@ typedef struct fs_superblock_t
     uint32_t magic;       // 超级块识别头
     uint32_t version;      // 文件系统版本
     uint32_t block_total;   // 总块数
+    uint32_t block_size;    // 块大小（字节）
     uint32_t first_block;  // 根目录块号
     char volume_name[256]; // 卷标，UTF-8编码
     // 之后全0
