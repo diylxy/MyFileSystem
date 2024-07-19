@@ -50,4 +50,8 @@ FS_STATUS fs_general_file_sync(fs_block_description_t *block, fs_general_file_ha
 
 FS_STATUS fs_general_file_close(fs_block_description_t *block, fs_general_file_handle_t *handle);
 
+FS_STATUS fs_general_file_remove(fs_block_description_t *block, fs_superblock_t *superblock, uint32_t blocknum);
+
+FS_STATUS fs_general_file_trim_size_to_current_position(fs_block_description_t *block, fs_superblock_t *superblock, fs_general_file_handle_t *handle);
+
 #endif

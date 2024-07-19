@@ -29,6 +29,7 @@ FS_STATUS fs_general_file_create(fs_block_description_t *block, fs_superblock_t 
     header->file_size = 0;
     header->create_time = time(NULL);
     header->modify_time = header->create_time;
+    header->magic = magic;
     strncpy(block->current_block_data + sizeof(fs_general_file_block_header_t) + sizeof(fs_general_file_header_t), file_name, file_name_size);
     TRUE_THEN_RETURN_FALSE(fs_block_write(block, free_block) == false);
     *block_first = free_block;
@@ -40,7 +41,7 @@ FS_STATUS fs_general_file_get_filename(fs_block_description_t *block, fs_general
     TRUE_THEN_RETURN_FALSE(block == NULL);
     TRUE_THEN_RETURN_FALSE(handle == NULL);
     int file_name_len_to_read = handle->header.name_length;
-    if(file_name_len_to_read > max_chr_count)
+    if (file_name_len_to_read > max_chr_count)
         file_name_len_to_read = max_chr_count;
     TRUE_THEN_RETURN_FALSE(fs_block_read(block, handle->block_first) == false);
     memcpy(buffer, block->current_block_data + sizeof(fs_general_file_block_header_t) + sizeof(fs_general_file_header_t), file_name_len_to_read);
@@ -105,7 +106,7 @@ uint32_t fs_general_file_write(fs_block_description_t *block, fs_superblock_t *s
             if (fs_block_read(block, handle->block_current) == false) // 读取当前块，用于覆盖写入（或更新双向链表节点信息）
                 break;
         fs_general_file_block_header_t *block_header = (fs_general_file_block_header_t *)block->current_block_data; // 获取块头信息用于更新链表
-        uint8_t *current_data;                                                                                   // 当前要写入的位置
+        uint8_t *current_data;                                                                                      // 当前要写入的位置
         current_data = block->current_block_data + this_time_header_length + handle->block_offset;
         memcpy(current_data, buffer + write_size, this_write_size);
         write_size += this_write_size;
@@ -169,7 +170,7 @@ FS_STATUS fs_general_file_seek(fs_block_description_t *block, fs_general_file_ha
     }
     else if (seek_method == SEEK_END)
     {
-        if (offset > 0 || offset < (int32_t)(handle->header.file_size))
+        if (offset > 0 || offset < -(int32_t)(handle->header.file_size))
             return false;
         offset_actual = handle->header.file_size - handle->pos_current;
         offset_actual += offset;
@@ -183,7 +184,7 @@ FS_STATUS fs_general_file_seek(fs_block_description_t *block, fs_general_file_ha
     }
     if (offset_actual == 0)
         return true;
-    fs_general_file_block_header_t *block_header;                                    // 用于处理文件数据链
+    fs_general_file_block_header_t *block_header;                                       // 用于处理文件数据链
     int32_t block_capacity = block->blocksize - sizeof(fs_general_file_block_header_t); // 暂存块容量，简化计算
     int32_t first_block_capacity = block_capacity - sizeof(fs_general_file_header_t) - handle->header.name_length;
     int64_t delta = handle->block_offset;
@@ -223,7 +224,8 @@ FS_STATUS fs_general_file_sync(fs_block_description_t *block, fs_general_file_ha
     if (fs_block_read(block, handle->block_first) == false)
         return false;
     fs_general_file_header_t *file_header = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
-    *file_header = handle->header; 
+    handle->header.modify_time = time(NULL);
+    *file_header = handle->header;
     if (fs_block_write(block, handle->block_first) == false)
         return false;
     return true;
@@ -231,6 +233,38 @@ FS_STATUS fs_general_file_sync(fs_block_description_t *block, fs_general_file_ha
 
 FS_STATUS fs_general_file_close(fs_block_description_t *block, fs_general_file_handle_t *handle)
 {
-    TRUE_THEN_RETURN_FALSE(fs_general_file_sync(block, handle));
+    TRUE_THEN_RETURN_FALSE(fs_general_file_sync(block, handle) == false);
+    return true;
+}
+
+FS_STATUS fs_general_file_remove(fs_block_description_t *block, fs_superblock_t *superblock, uint32_t blocknum)
+{
+    TRUE_THEN_RETURN_FALSE(fs_block_read(block, blocknum) == false);
+    fs_general_file_block_header_t *header = (fs_general_file_block_header_t *)block->current_block_data;
+    fs_general_file_header_t *header_file = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
+    memset(header_file, 0, sizeof(fs_general_file_header_t));
+    fs_block_write(block, blocknum);
+    while (blocknum != 0)
+    {
+        fs_free_bitmap_free(block, superblock, blocknum);
+        blocknum = header->block_next;
+        TRUE_THEN_RETURN_FALSE(fs_block_read(block, blocknum) == false);
+    }
+    return true;
+}
+
+FS_STATUS fs_general_file_trim_size_to_current_position(fs_block_description_t *block, fs_superblock_t *superblock, fs_general_file_handle_t *handle)
+{
+    fs_general_file_block_header_t *header = (fs_general_file_block_header_t *)block->current_block_data;
+    uint32_t next_block; // 存储需要释放的块号
+    TRUE_THEN_RETURN_FALSE(fs_block_read(block, handle->block_current) == false);
+    next_block = header->block_next;
+    while (next_block > 0)
+    {
+        fs_free_bitmap_free(block, superblock, next_block);
+        TRUE_THEN_RETURN_FALSE(fs_block_read(block, next_block) == false);
+        next_block = header->block_next;
+    }
+    handle->header.file_size = handle->pos_current;
     return true;
 }
