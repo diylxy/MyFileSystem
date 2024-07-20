@@ -100,6 +100,7 @@ FS_STATUS fs_free_bitmap_format(fs_block_description_t *block, fs_superblock_t *
         }
         fs_block_write(block, i);
     }
+    return true;
 }
 
 static const uint32_t countTable[256] = {
