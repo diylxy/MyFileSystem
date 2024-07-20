@@ -72,7 +72,7 @@ uint32_t fs_general_file_read(fs_block_description_t *block, fs_superblock_t *su
         fs_general_file_block_header_t *block_header = (fs_general_file_block_header_t *)block->current_block_data;
         uint8_t *current_data;
         current_data = block->current_block_data + this_time_header_length + handle->block_offset;
-        memcpy(buffer + read_size, current_data, this_read_size);
+        memcpy((uint8_t *)buffer + read_size, current_data, this_read_size);
         read_size += this_read_size;
         handle->pos_current += this_read_size;
         handle->block_offset += this_read_size;
@@ -109,7 +109,7 @@ uint32_t fs_general_file_write(fs_block_description_t *block, fs_superblock_t *s
         fs_general_file_block_header_t *block_header = (fs_general_file_block_header_t *)block->current_block_data; // 获取块头信息用于更新链表
         uint8_t *current_data;                                                                                      // 当前要写入的位置
         current_data = block->current_block_data + this_time_header_length + handle->block_offset;
-        memcpy(current_data, buffer + write_size, this_write_size);
+        memcpy(current_data, (const uint8_t *)buffer + write_size, this_write_size);
         write_size += this_write_size;
         handle->pos_current += this_write_size;
         handle->block_offset += this_write_size;
