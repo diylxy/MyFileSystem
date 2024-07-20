@@ -12,16 +12,16 @@ int main()
     if(need_format)
     {
         printf("######################### Device needs format.\n");
-        sfs_diskformat(fs, DISK_SIZE, BLOCK_SIZE, "SimpleFS");
+        sfs_diskformat(fs, DISK_SIZE, BLOCK_SIZE, "88888888");
     }
     // 创建文件
-    printf("#########################Creating test1.bin\n");
-    sfs_fcreate(fs, "/test1.bin");
-    simplefs_file_t *fp = sfs_fopen(fs, "/测试1.bin", MODE_WRITE);
-    sfs_fwrite("Hello World!\n123", 16, fp);
+    printf("#########################Creating 3333.3333\n");
+    sfs_fcreate(fs, "/3333.3333");
+    simplefs_file_t *fp = sfs_fopen(fs, "/3333.3333", MODE_WRITE);
+    sfs_fwrite("HHHH", 4, fp);
     sfs_fclose(fp);
-    printf("#########################Creating testdir\n");
-    sfs_mkdir(fs, "/testdir");
+    printf("#########################Creating FFFF\n");
+    sfs_mkdir(fs, "/FFFF");
     // 遍历目录
     printf("######################### Walking root\n");
     simplefs_dir_t *root;

@@ -1,5 +1,22 @@
 #include <fs_block.h>
+#define DEBUGGING_1 
 
+#ifdef DEBUGGING_1
+void dump_hex_128(const uint8_t data[])
+{
+    printf("Dumping first 128 bytes:\n");
+    for(int i = 0; i < 128; i++)
+    {
+        printf("%02x ", data[i]);
+        if(i % 16 == 15)
+        {
+            printf("\n");
+        }
+    }
+    printf("\n");
+    getchar();
+}
+#endif
 FS_STATUS fs_block_check_crc32(fs_block_description_t *block)
 {
     uint32_t crc32_origin;
@@ -65,7 +82,7 @@ FS_STATUS fs_block_close(fs_block_description_t *block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("==> W%d\n", block->__write_cache_block);
+        printf("==> W[Sync_Auto] %d\n", block->__write_cache_block);
         block->__write_cache_block = -1;
     }
     fclose(block->fp);
@@ -81,14 +98,22 @@ FS_STATUS fs_block_read(fs_block_description_t *block, uint32_t target_block)
     {
         memcpy(block->current_block_data, block->__write_cache, block->blocksize);           // 直接读取写入缓存
         block->current_block = block->__write_cache_block;
+        printf("<== R [WBuffer] %d\n", target_block);
+        dump_hex_128(block->current_block_data);
         return true;
     }
     if(block->current_block == target_block)
+    {
+        printf("<== R [SameAsBefore] %d\n", target_block);
+        dump_hex_128(block->current_block_data);
         return true;
+    }
+
     fseek(block->fp, target_block * block->blocksize, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
     printf("<== R %d\n", target_block);
+    dump_hex_128(block->current_block_data);
     TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
     return true;
 }
@@ -100,12 +125,15 @@ FS_STATUS fs_block_read_no_read_cache(fs_block_description_t *block, uint32_t ta
     {
         memcpy(block->current_block_data, block->__write_cache, block->blocksize);           // 直接读取写入缓存
         block->current_block = block->__write_cache_block;
+        printf("<== R [WBuffer] %d\n", target_block);
+        dump_hex_128(block->current_block_data);
         return true;
     }
     fseek(block->fp, target_block * block->blocksize, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
-    printf("<== R [F]%d\n", target_block);
+    printf("<== R [Forced] %d\n", target_block);
+    dump_hex_128(block->current_block_data);
     if(fs_block_check_crc32(block) == false) return false;
     return true;
 }
@@ -117,17 +145,19 @@ FS_STATUS fs_block_write(fs_block_description_t *block, uint32_t target_block)
     fs_block_fill_crc32(block);
     if(target_block == 0)
     {
-        printf("警告: 正在修改超级块\n");
+        printf("Warning: Editing Superblock! \n");
     }
     if(block->__write_cache_block != -1 && block->__write_cache_block != target_block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("==> W%d\n", block->__write_cache_block);
+        printf("==> W[Sync_Auto] %d\n", block->__write_cache_block);
     }
     block->__write_cache_block = target_block;
-    memcpy(block->__write_cache, block->current_block_data, block->blocksize);
     block->current_block = target_block;
+    memcpy(block->__write_cache, block->current_block_data, block->blocksize);
+    printf("==> W[Buffered] %d\n", block->current_block);
+    dump_hex_128(block->current_block_data);
     return true;
 }
 
@@ -138,7 +168,8 @@ FS_STATUS fs_block_sync(fs_block_description_t *block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("==> W%d\n", block->__write_cache_block);
+        printf("==> W[Sync] %d\n", block->__write_cache_block);
+        dump_hex_128(block->current_block_data);
         block->__write_cache_block = -1;
     }
     return true;

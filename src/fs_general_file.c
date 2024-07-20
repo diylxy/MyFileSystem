@@ -28,7 +28,7 @@ FS_STATUS fs_general_file_create(fs_block_description_t *block, fs_superblock_t 
     fs_general_file_header_t *header = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
     header->name_length = file_name_size;
     header->file_size = 0;
-    header->create_time = time(NULL);
+    header->create_time = 0x12345678;//time(NULL);
     header->modify_time = header->create_time;
     header->magic = magic;
     strncpy(block->current_block_data + sizeof(fs_general_file_block_header_t) + sizeof(fs_general_file_header_t), file_name, file_name_size);
@@ -238,7 +238,7 @@ FS_STATUS fs_general_file_sync(fs_block_description_t *block, fs_general_file_ha
         if (fs_block_read(block, handle->block_first) == false)
             return false;
         fs_general_file_header_t *file_header = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
-        handle->header.modify_time = time(NULL);
+        handle->header.modify_time = 0x12345678;//time(NULL);
         *file_header = handle->header;
         if (fs_block_write(block, handle->block_first) == false)
             return false;
