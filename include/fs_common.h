@@ -15,6 +15,10 @@ typedef bool FS_STATUS;
 #define FS_BLOCK_TREE_MAGIC 0xBAAD // just for fun
 #define FS_BLOCK_FILE_MAGIC 0xF00D
 
+#ifndef NDEBUG
 #define TRUE_THEN_RETURN_FALSE(x) assert ((x) == false)
+#else
+#define TRUE_THEN_RETURN_FALSE(x) if(x) return false
+#endif
 
 #endif
