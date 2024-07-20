@@ -73,7 +73,10 @@ fs_general_file_handle_t *fs_general_file_open_by_path(fs_handle_t *fs, fs_tree_
     if (path[0] == '/')
         ++path;
     if (path[0] == 0)
+    {
+        free(tree_walk_result);
         return parent;
+    }
     next_slash = strchr(path, '/');
     if (next_slash == NULL)
     {
