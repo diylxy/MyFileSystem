@@ -23,20 +23,20 @@ int main()
     simplefs_file_t *fp = sfs_fopen(fs, "/测试1.bin", MODE_WRITE);
     sfs_fwrite("Hello World!\n123", 16, fp);
     sfs_fclose(fp);
+    printf("创建目录 /testdir\n");
     sfs_mkdir(fs, "/testdir");
+    printf("创建目录 /testdir/123\n");
     sfs_mkdir(fs, "/testdir/123");
-    sfs_mkdir(fs, "/testdir/12312");
+    printf("创建文件 /test2.bin\n");
     sfs_fcreate(fs, "/test2.bin");
-    sfs_fcreate(fs, "/test3.bin");
-    sfs_fcreate(fs, "/test4.bin");
-    sfs_fcreate(fs, "/test5.bin");
-    sfs_fcreate(fs, "/test6.bin");
-    sfs_fcreate(fs, "/testdir/12312/test5.bin");
+    printf("创建文件 /testdir/123/test5.bin\n");
+    sfs_fcreate(fs, "/testdir/123/test5.bin");
     // 删除目录
     sfs_remove(fs, "/testdir/12312/test5.bin");
-    sfs_tree_rmdir(fs, "/testdir/12312");
+    printf("删除文件 /testdir/123/test5.bin\n");
+    sfs_remove(fs, "/testdir/123/test5.bin");
+    printf("删除目录 /testdir/123\n");
     sfs_tree_rmdir(fs, "/testdir/123");
-    sfs_tree_rmdir(fs, "/testdir");
     // 遍历目录
     printf("遍历目录\n");
     simplefs_dir_t *root;
