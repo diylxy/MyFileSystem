@@ -1,6 +1,6 @@
 #ifndef __SIMPLEFS_FS_TYPEDEFS_H__
 #define __SIMPLEFS_FS_TYPEDEFS_H__
-
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 

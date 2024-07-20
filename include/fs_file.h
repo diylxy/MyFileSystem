@@ -1,10 +1,6 @@
 #ifndef __SIMPLEFS_FS_FILE_H__
 #define __SIMPLEFS_FS_FILE_H__
-#include <fs_typedefs.h>
-#include <fs_block.h>
-#include <fs_superblock.h>
-#include <fs_general_file.h>
-#include <fs_tree.h>
+#include <fs_common.h>
 
 
 FS_STATUS fs_file_create(fs_handle_t *fs, const char *path);

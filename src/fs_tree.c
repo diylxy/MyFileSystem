@@ -1,5 +1,9 @@
-#include <fs.h>
-#include "fs_tree.h"
+#include <fs_tree.h>
+#include <fs_block.h>
+#include <fs_superblock.h>
+#include <fs_general_file.h>
+#include <fs_file.h>
+#include <fs_tree.h>
 
 FS_STATUS fs_tree_file_create(fs_handle_t *fs, fs_tree_handle_t *parent, const char *name, fs_tree_handle_t *result)
 {

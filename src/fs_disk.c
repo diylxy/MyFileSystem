@@ -1,4 +1,8 @@
-#include <fs.h>
+#include <fs_block.h>
+#include <fs_superblock.h>
+#include <fs_general_file.h>
+#include <fs_tree.h>
+#include <fs_disk.h>
 
 FS_STATUS fs_disk_create_empty(const char *file_name, uint32_t size_in_bytes)
 {

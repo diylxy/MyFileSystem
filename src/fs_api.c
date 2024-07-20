@@ -1,4 +1,8 @@
-#include <fs.h>
+#include <fs_common.h>
+#include <fs_general_file.h>
+#include <fs_disk.h>
+#include <fs_tree.h>
+#include <fs_file.h>
 #include <fs_api.h>
 
 simplefs_disk_handle_t *sfs_diskopen(const char *device, bool *need_format)
