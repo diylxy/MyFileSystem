@@ -198,6 +198,7 @@ FS_STATUS fs_tree_create(fs_handle_t *fs, const char *path)
         new_tree_name_len = strlen(new_tree_name);
         char *parent_path = (char *)malloc(path_len + 1);
         strncpy(parent_path, path, path_len - new_tree_name_len - 1);
+        parent_path[path_len - new_tree_name_len - 1] = 0;
         parent = fs_tree_open(fs, parent_path);
         free(parent_path);
     }

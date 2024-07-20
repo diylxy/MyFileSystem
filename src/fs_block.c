@@ -65,7 +65,7 @@ FS_STATUS fs_block_close(fs_block_description_t *block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("==> 写%ld\n", block->__write_cache_block);
+        printf("==> W%d\n", block->__write_cache_block);
         block->__write_cache_block = -1;
     }
     fclose(block->fp);
@@ -88,7 +88,7 @@ FS_STATUS fs_block_read(fs_block_description_t *block, uint32_t target_block)
     fseek(block->fp, target_block * block->blocksize, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
-    printf("<== 读%d\n", target_block);
+    printf("<== R %d\n", target_block);
     TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
     return true;
 }
@@ -105,7 +105,7 @@ FS_STATUS fs_block_read_no_read_cache(fs_block_description_t *block, uint32_t ta
     fseek(block->fp, target_block * block->blocksize, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
-    printf("<== 读[F]%d\n", target_block);
+    printf("<== R [F]%d\n", target_block);
     if(fs_block_check_crc32(block) == false) return false;
     return true;
 }
@@ -123,7 +123,7 @@ FS_STATUS fs_block_write(fs_block_description_t *block, uint32_t target_block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("==> 写%ld\n", block->__write_cache_block);
+        printf("==> W%d\n", block->__write_cache_block);
     }
     block->__write_cache_block = target_block;
     memcpy(block->__write_cache, block->current_block_data, block->blocksize);
@@ -138,7 +138,7 @@ FS_STATUS fs_block_sync(fs_block_description_t *block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("==> 写%ld\n", block->__write_cache_block);
+        printf("==> W%d\n", block->__write_cache_block);
         block->__write_cache_block = -1;
     }
     return true;
