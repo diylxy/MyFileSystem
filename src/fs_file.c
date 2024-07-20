@@ -36,7 +36,7 @@ FS_STATUS fs_file_create(fs_handle_t *fs, const char *path)
     if (parent == NULL)
         return false;
     // 判断是否存在
-    if(fs_tree_exist(fs, parent, new_tree_name))
+    if (fs_tree_exist(fs, parent, new_tree_name))
     {
         fs_tree_close(fs, parent);
         return false;
@@ -81,7 +81,7 @@ fs_general_file_handle_t *fs_general_file_open_by_path(fs_handle_t *fs, fs_tree_
     }
 
     // 遍历目录
-    fs_general_file_seek(fs->block, parent, 0, SEEK_SET);
+    fs_general_file_rewind(fs->block, parent);
     while (fs_tree_readdir(fs, parent, tree_walk_result))
     {
         if (strncmp(path, tree_walk_result->name, this_name_length) == 0 && tree_walk_result->name[this_name_length] == 0) // 文件名匹配
@@ -142,4 +142,40 @@ void fs_file_close(fs_handle_t *fs, fs_file_handle_t *fp)
 {
     fs_general_file_close(fs->block, fp);
     free(fp);
+}
+
+FS_STATUS fs_file_remove(fs_handle_t *fs, fs_tree_handle_t *parent, fs_file_handle_t *file)
+{
+    TRUE_THEN_RETURN_FALSE(file->header.magic != FS_BLOCK_FILE_MAGIC);
+    TRUE_THEN_RETURN_FALSE(fs_tree_remove_entry(fs, parent, file->block_first) == false);
+    TRUE_THEN_RETURN_FALSE(fs_general_file_sync(fs->block, parent) == false);
+    TRUE_THEN_RETURN_FALSE(fs_general_file_remove(fs->block, fs->superblock, file->block_first) == false);
+    return true;
+}
+
+FS_STATUS fs_file_remove_by_path(fs_handle_t *fs, const char *path)
+{
+    fs_file_handle_t *file = fs_file_open(fs, path);
+    if (file == NULL)
+        return false;
+    if (file->header.magic != FS_BLOCK_FILE_MAGIC)
+    {
+        fs_file_close(fs, file);
+        return false;
+    }
+    fs_tree_handle_t *parent = fs_tree_open_parent(fs, path);
+    if (fs_tree_remove_entry(fs, parent, file->block_first) == false)
+    {
+        free(file);
+        fs_tree_close(fs, parent);
+        return false;
+    }
+    fs_tree_close(fs, parent);
+    if (fs_general_file_remove(fs->block, fs->superblock, file->block_first) == false)
+    {
+        free(file);
+        return false;
+    }
+    free(file);
+    return true;
 }

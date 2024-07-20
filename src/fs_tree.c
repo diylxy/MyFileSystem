@@ -16,6 +16,8 @@ FS_STATUS fs_tree_readdir(fs_handle_t *fs, fs_tree_handle_t *tree, fs_tree_read_
 {
     uint32_t next_block;
     TRUE_THEN_RETURN_FALSE(tree->header.magic != FS_BLOCK_TREE_MAGIC);
+    if(tree->pos_current == tree->header.file_size)
+        return false;
     TRUE_THEN_RETURN_FALSE(fs_general_file_read(fs->block, fs->superblock, tree, &next_block, 4) != 4);
     if (next_block == 0)
     {
@@ -73,6 +75,7 @@ FS_STATUS fs_tree_remove_entry(fs_handle_t *fs, fs_tree_handle_t *tree, uint32_t
             uint32_t handle_snapshot_end_block_current; // 当前读写的物理块号（最后一项）
             uint32_t handle_snapshot_end_block_offset;  // 当前读写的块内偏移（最后一项）
             uint32_t handle_snapshot_end_pos_current;   // 当前读写的位置(相对于文件第一个字节)（最后一项）
+            found_entry = true;
             if (i == entry_cnt - 1)
             {
                 TRUE_THEN_RETURN_FALSE(fs_general_file_seek(fs->block, tree, -4, SEEK_END) == false);
@@ -83,7 +86,6 @@ FS_STATUS fs_tree_remove_entry(fs_handle_t *fs, fs_tree_handle_t *tree, uint32_t
             handle_snapshot_block_current = tree->block_current;
             handle_snapshot_block_offset = tree->block_offset;
             handle_snapshot_pos_current = tree->pos_current;
-            found_entry = true;
             TRUE_THEN_RETURN_FALSE(fs_general_file_seek(fs->block, tree, -4, SEEK_END) == false);
             // 暂存目录项最后一项起始文件偏移量
             handle_snapshot_end_block_current = tree->block_current;
@@ -113,7 +115,10 @@ FS_STATUS fs_tree_rmdir(fs_handle_t *fs, fs_tree_handle_t *tree)
     uint32_t parent;
     TRUE_THEN_RETURN_FALSE(fs_general_file_seek(fs->block, tree, 0, SEEK_SET) == false);
     TRUE_THEN_RETURN_FALSE(fs_general_file_read(fs->block, fs->superblock, tree, &parent, 4) != 4);
-    TRUE_THEN_RETURN_FALSE(fs_tree_remove_entry(fs, tree, parent) == false);
+    fs_tree_handle_t parent_handle;
+    TRUE_THEN_RETURN_FALSE(fs_general_file_open(fs->block, fs->superblock, &parent_handle, parent) == false);
+    TRUE_THEN_RETURN_FALSE(fs_tree_remove_entry(fs, &parent_handle, tree->block_first) == false);
+    TRUE_THEN_RETURN_FALSE(fs_general_file_close(fs->block, &parent_handle) == false);
     TRUE_THEN_RETURN_FALSE(fs_general_file_remove(fs->block, fs->superblock, tree->block_first) == false);
     return true;
 }
@@ -196,14 +201,14 @@ FS_STATUS fs_tree_create(fs_handle_t *fs, const char *path)
     if (parent == NULL)
         return false;
     // 判断是否存在
-    if(fs_tree_exist(fs, parent, new_tree_name))
+    if (fs_tree_exist(fs, parent, new_tree_name))
     {
         fs_tree_close(fs, parent);
         return false;
     }
     // 创建子目录
     fs_tree_handle_t subdir;
-    if(fs_tree_file_create(fs, parent, new_tree_name, &subdir))
+    if (fs_tree_file_create(fs, parent, new_tree_name, &subdir))
     {
         fs_general_file_close(fs->block, &subdir);
         fs_tree_close(fs, parent);
@@ -211,4 +216,47 @@ FS_STATUS fs_tree_create(fs_handle_t *fs, const char *path)
     }
     fs_tree_close(fs, parent);
     return false;
+}
+
+fs_tree_handle_t *fs_tree_open_parent(fs_handle_t *fs, const char *path)
+{
+    fs_general_file_handle_t *fp;
+    if (path[0] == '/')
+        ++path;
+    uint32_t path_len = strlen(path);
+    if (path_len == 0)
+        return fs_general_file_open_by_path(fs, NULL, "/");
+    char *path_copy = (char *)malloc(path_len + 1);
+    if(path_copy == NULL)return NULL;
+    strcpy(path_copy, path);
+    if(path_copy[path_len - 1] == '/')
+    {
+        path_copy[path_len - 1] = 0;
+        path_len -= 1;
+    }
+    char *parent = strrchr(path_copy, '/');
+    if(parent == NULL)
+        return fs_general_file_open_by_path(fs, NULL, "/");
+    *parent = 0;
+    fp = fs_general_file_open_by_path(fs, NULL, path_copy);
+    if (fp != NULL)
+    {
+        if (fp->header.magic != FS_BLOCK_TREE_MAGIC)
+        {
+            free(fp);
+            fp = NULL;
+        }
+    }
+    free(path_copy);
+    return fp;
+}
+
+FS_STATUS fs_tree_rmdir_by_path(fs_handle_t *fs, const char *path)
+{
+    fs_tree_handle_t *tmp;
+    tmp = fs_tree_open(fs, path);
+    if(tmp == NULL) return false;
+    TRUE_THEN_RETURN_FALSE(fs_tree_rmdir(fs, tmp) == false);
+    free(tmp);
+    return true;
 }

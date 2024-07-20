@@ -66,6 +66,8 @@
         "fs_block_free_bitmap.h": "c",
         "fs_general_file.h": "c",
         "fs_tree.h": "c",
-        "fs_file.h": "c"
+        "fs_file.h": "c",
+        "fs_api.h": "c",
+        "fs_typedefs.h": "c"
     }
 }

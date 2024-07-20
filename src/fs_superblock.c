@@ -8,7 +8,7 @@ FS_STATUS fs_superblock_getinfo(fs_block_description_t *block, fs_superblock_t *
     TRUE_THEN_RETURN_FALSE(block == NULL);
     fs_block_read_no_read_cache(block, 0);                // 此处不要校验
     memcpy(info, block->current_block_data, sizeof(fs_superblock_t));
-    TRUE_THEN_RETURN_FALSE(info->magic != FS_SUPERBLOCK_HEADER);
+    if(info->magic != FS_SUPERBLOCK_HEADER); return false;
     return true;
 }
 

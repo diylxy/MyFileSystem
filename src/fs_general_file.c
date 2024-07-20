@@ -161,6 +161,14 @@ uint32_t fs_general_file_write(fs_block_description_t *block, fs_superblock_t *s
     return write_size;
 }
 
+FS_STATUS fs_general_file_rewind(fs_block_description_t *block, fs_general_file_handle_t *handle)
+{
+    handle->block_current = handle->block_first;
+    handle->block_offset = 0;
+    handle->pos_current = 0;
+    return true;
+}
+
 FS_STATUS fs_general_file_seek(fs_block_description_t *block, fs_general_file_handle_t *handle, int32_t offset, int seek_method)
 {
     int64_t offset_actual;
@@ -224,17 +232,17 @@ FS_STATUS fs_general_file_seek(fs_block_description_t *block, fs_general_file_ha
 
 FS_STATUS fs_general_file_sync(fs_block_description_t *block, fs_general_file_handle_t *handle)
 {
-    if (fs_block_read(block, handle->block_first) == false)
-        return false;
-    fs_general_file_header_t *file_header = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
     if (handle->changed)
     {
         handle->changed = false;
+        if (fs_block_read(block, handle->block_first) == false)
+            return false;
+        fs_general_file_header_t *file_header = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
         handle->header.modify_time = time(NULL);
+        *file_header = handle->header;
+        if (fs_block_write(block, handle->block_first) == false)
+            return false;
     }
-    *file_header = handle->header;
-    if (fs_block_write(block, handle->block_first) == false)
-        return false;
     return true;
 }
 
@@ -272,6 +280,10 @@ FS_STATUS fs_general_file_trim_size_to_current_position(fs_block_description_t *
         TRUE_THEN_RETURN_FALSE(fs_block_read(block, next_block) == false);
         next_block = header->block_next;
     }
-    handle->header.file_size = handle->pos_current;
+    if (handle->header.file_size != handle->pos_current)
+    {
+        handle->header.file_size = handle->pos_current;
+        handle->changed = true;
+    }
     return true;
 }

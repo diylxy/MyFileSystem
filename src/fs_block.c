@@ -9,7 +9,10 @@ FS_STATUS fs_block_check_crc32(fs_block_description_t *block)
     *(uint32_t *)(block->current_block_data) = 0;
     crc32_calculated = crc32(block->current_block_data, block->blocksize);
     *(uint32_t *)(block->current_block_data) = crc32_origin;
-    TRUE_THEN_RETURN_FALSE(crc32_origin != crc32_calculated);
+    if(crc32_origin != crc32_calculated)
+    {
+        return false;
+    }
     return true;
 }
 
@@ -34,7 +37,7 @@ FS_STATUS fs_block_open(fs_block_description_t *block, char *filename, uint32_t 
     TRUE_THEN_RETURN_FALSE(block->current_block_data == NULL);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = 0;
-    TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
+    if(fs_block_check_crc32(block) == false) return false;
     return true;
 }
 
@@ -51,7 +54,7 @@ FS_STATUS fs_block_reset_blocksize(fs_block_description_t *block, uint32_t block
     fseek(block->fp, 0, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = 0;
-    TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
+    if(fs_block_check_crc32(block) == false) return false;
     return true;
 }
 
@@ -103,7 +106,7 @@ FS_STATUS fs_block_read_no_read_cache(fs_block_description_t *block, uint32_t ta
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
     // printf("Forced read target_block: %d\n", target_block);
-    TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
+    if(fs_block_check_crc32(block) == false) return false;
     return true;
 }
 

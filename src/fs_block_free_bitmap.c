@@ -1,5 +1,11 @@
 #include <fs_block_free_bitmap.h>
 
+typedef struct fs_block_free_bitmap_header_t
+{
+    uint32_t crc32; // 当前块的CRC（固定）
+    // 之后直到该块的末尾，使用位示图的方式表示空闲块
+} fs_block_free_bitmap_header_t;
+
 static uint32_t get_free_bitmap_capacity(fs_block_description_t *block)
 {
     return (block->blocksize - sizeof(fs_block_free_bitmap_header_t)) * 8;
