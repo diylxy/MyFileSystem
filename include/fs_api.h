@@ -29,7 +29,7 @@ typedef struct simplefs_dir_t
 
 typedef fs_tree_read_result_t simplefs_tree_read_result_t;
 
-#ifdef SimpleFS_so_EXPORTS
+#ifdef SimpleFS_dll_EXPORTS
 #define SFS_EXPORT_API __declspec(dllexport)
 #else
 #define SFS_EXPORT_API
