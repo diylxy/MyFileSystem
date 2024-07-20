@@ -12,4 +12,6 @@ FS_STATUS fs_free_bitmap_free(fs_block_description_t *block, fs_superblock_t *su
 
 FS_STATUS fs_free_bitmap_format(fs_block_description_t *block, fs_superblock_t *superblock);
 
+uint32_t fs_free_bitmap_get_free_block_total(fs_block_description_t *block, fs_superblock_t *superblock);
+
 #endif

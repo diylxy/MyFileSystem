@@ -39,6 +39,8 @@ bool sfs_disk_create_empty(const char *disk, uint32_t disk_size);
 
 bool sfs_diskformat(simplefs_disk_handle_t *device, uint32_t disk_size, uint32_t block_size, const char *volume_name);
 
+uint32_t sfs_diskfree(simplefs_disk_handle_t *device);
+
 bool sfs_fcreate(simplefs_disk_handle_t *drive, const char *path);
 
 simplefs_file_t *sfs_fopen(simplefs_disk_handle_t *drive, const char *path, simplefs_open_mode_t mode);
@@ -70,3 +72,4 @@ bool sfs_tree_rmdir(simplefs_disk_handle_t *drive, const char *path);
 bool sfs_remove(simplefs_disk_handle_t *drive, const char *path);
 
 #endif
+

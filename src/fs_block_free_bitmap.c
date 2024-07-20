@@ -26,7 +26,7 @@ FS_STATUS fs_free_bitmap_allocate(fs_block_description_t *block, fs_superblock_t
     for (fbmap_current = 1; fbmap_current < total_block + 1; fbmap_current++)
     {
         TRUE_THEN_RETURN_FALSE(fs_block_read(block, fbmap_current) == false);
-        uint32_t first_not_ff = 0xffffffff;        // 第一个非全FF的字节
+        uint32_t first_not_ff = 0xffffffff; // 第一个非全FF的字节
         uint8_t bmp_first_no_ff;
         for (first_not_ff = 0; first_not_ff < block->blocksize - sizeof(fs_block_free_bitmap_header_t); first_not_ff++)
         {
@@ -48,6 +48,11 @@ FS_STATUS fs_free_bitmap_allocate(fs_block_description_t *block, fs_superblock_t
             if ((bmp_first_no_ff & (1 << i)) == 0)
             {
                 first_zero_blocknum = i + first_not_ff * 8 + (fbmap_current - 1) * cap;
+                if (first_zero_blocknum > superblock->block_total)
+                {
+                    printf("No free block\n");
+                    return false; // 无可用空间
+                }
                 bmp_first_no_ff |= 1 << i;
                 block->current_block_data[sizeof(fs_block_free_bitmap_header_t) + first_not_ff] = bmp_first_no_ff;
                 fs_block_write(block, fbmap_current); // 记录该块已被使用
@@ -95,4 +100,44 @@ FS_STATUS fs_free_bitmap_format(fs_block_description_t *block, fs_superblock_t *
         }
         fs_block_write(block, i);
     }
+}
+
+static const uint32_t countTable[256] = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
+
+uint32_t fs_free_bitmap_get_free_block_total(fs_block_description_t *block, fs_superblock_t *superblock)
+{
+    uint32_t total_block = fs_free_bitmap_get_total_block(block, superblock);
+    uint32_t cap = get_free_bitmap_capacity(block);
+    uint32_t fbmap_current = 1;
+    uint32_t result = 0;
+    for (fbmap_current = 1; fbmap_current < total_block + 1; fbmap_current++)
+    {
+        if (fs_block_read(block, fbmap_current) == false)
+            return 0;
+        uint32_t this_size = block->blocksize - sizeof(fs_block_free_bitmap_header_t);
+        if(fbmap_current == total_block && this_size > (superblock->block_total / 8) % (block->blocksize - sizeof(fs_block_free_bitmap_header_t)))
+            this_size = (superblock->block_total / 8) % (block->blocksize - sizeof(fs_block_free_bitmap_header_t));
+        this_size += sizeof(fs_block_free_bitmap_header_t);
+        for (uint32_t i = sizeof(fs_block_free_bitmap_header_t); i < this_size; ++i)
+        {
+            result += 8 - (countTable[block->current_block_data[i]]);
+        }
+    }
+    return result;
 }

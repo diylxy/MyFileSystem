@@ -25,6 +25,11 @@ bool sfs_diskformat(simplefs_disk_handle_t *device, uint32_t disk_size, uint32_t
     return fs_disk_format(device, disk_size, block_size, volume_name);
 }
 
+uint32_t sfs_diskfree(simplefs_disk_handle_t *device)
+{
+    return fs_free_bitmap_get_free_block_total(device->block, device->superblock);
+}
+
 bool sfs_fcreate(simplefs_disk_handle_t *drive, const char *path)
 {
     return fs_file_create(drive, path);

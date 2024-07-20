@@ -15,7 +15,7 @@ int main()
         sfs_diskformat(fs, DISK_SIZE, BLOCK_SIZE, "SimpleFS");
     }
     printf("虚拟块设备已打开\n");
-
+    printf("可用空间：%d\n", sfs_diskfree(fs));
     // 创建文件
     printf("创建文件\n");
     sfs_fcreate(fs, "/测试1.bin");
@@ -60,6 +60,7 @@ int main()
     }
     printf("关闭文件\n");
     sfs_dir_close(root);
+    printf("可用空间：%d块\n", sfs_diskfree(fs));
     sfs_diskclose(fs);
     return 0;
 }
