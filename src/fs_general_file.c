@@ -31,7 +31,7 @@ FS_STATUS fs_general_file_create(fs_block_description_t *block, fs_superblock_t 
     header->create_time = 0x12345678;//time(NULL);
     header->modify_time = header->create_time;
     header->magic = magic;
-    strncpy(block->current_block_data + sizeof(fs_general_file_block_header_t) + sizeof(fs_general_file_header_t), file_name, file_name_size);
+    strcpy(block->current_block_data + sizeof(fs_general_file_block_header_t) + sizeof(fs_general_file_header_t), file_name);
     TRUE_THEN_RETURN_FALSE(fs_block_write(block, free_block) == false);
     *block_first = free_block;
     return true;
