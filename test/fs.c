@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <fs_api.h>
-#include <fs_disk.h>
 
 #define DISK_SIZE (1024 * 1024 * 4)
 #define BLOCK_SIZE 1024

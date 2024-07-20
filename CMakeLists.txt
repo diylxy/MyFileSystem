@@ -12,4 +12,34 @@ include_directories (include)
 add_executable(simpleFS ${DIR_SRCS} test/fs.c)
 
 add_library(SimpleFS_a STATIC ${DIR_SRCS})
+set_property(TARGET SimpleFS_a PROPERTY OUTPUT_NAME SimpleFS)
 add_library(SimpleFS_so SHARED ${DIR_SRCS})
+set_property(TARGET SimpleFS_so PROPERTY OUTPUT_NAME SimpleFS)
+
+add_custom_command(TARGET SimpleFS_a POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory out/
+)
+
+add_custom_command(TARGET SimpleFS_a POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:SimpleFS_a> out/
+)
+
+add_custom_command(TARGET SimpleFS_so POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:SimpleFS_so> out/
+)
+
+add_custom_command(TARGET SimpleFS_so POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/test/fs.c out/
+)
+
+add_custom_command(TARGET SimpleFS_so POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/include/fs_api.h out/
+)
+
+add_custom_command(TARGET SimpleFS_so POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/include/fs_typedefs.h out/
+)
+
+add_custom_command(TARGET SimpleFS_so POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/test/Makefile out/
+)
