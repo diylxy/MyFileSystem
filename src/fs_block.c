@@ -62,7 +62,7 @@ FS_STATUS fs_block_close(fs_block_description_t *block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("Cached write : %ld\n", block->__write_cache_block);
+        // printf("Cached write : %ld\n", block->__write_cache_block);
         block->__write_cache_block = -1;
     }
     fclose(block->fp);
@@ -77,6 +77,7 @@ FS_STATUS fs_block_read(fs_block_description_t *block, uint32_t target_block)
     if(block->__write_cache_block == target_block)
     {
         memcpy(block->current_block_data, block->__write_cache, block->blocksize);           // 直接读取写入缓存
+        block->current_block = block->__write_cache_block;
         return true;
     }
     if(block->current_block == target_block)
@@ -84,7 +85,7 @@ FS_STATUS fs_block_read(fs_block_description_t *block, uint32_t target_block)
     fseek(block->fp, target_block * block->blocksize, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
-    printf("Read target_block: %d\n", target_block);
+    // printf("Read target_block: %d\n", target_block);
     TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
     return true;
 }
@@ -95,12 +96,13 @@ FS_STATUS fs_block_read_no_read_cache(fs_block_description_t *block, uint32_t ta
     if(block->__write_cache_block == target_block)
     {
         memcpy(block->current_block_data, block->__write_cache, block->blocksize);           // 直接读取写入缓存
+        block->current_block = block->__write_cache_block;
         return true;
     }
     fseek(block->fp, target_block * block->blocksize, SEEK_SET);
     fread(block->current_block_data, block->blocksize, 1, block->fp);
     block->current_block = target_block;
-    printf("Forced read target_block: %d\n", target_block);
+    // printf("Forced read target_block: %d\n", target_block);
     TRUE_THEN_RETURN_FALSE(fs_block_check_crc32(block) == false);
     return true;
 }
@@ -110,11 +112,15 @@ FS_STATUS fs_block_write(fs_block_description_t *block, uint32_t target_block)
 {
     TRUE_THEN_RETURN_FALSE(block == NULL);
     fs_block_fill_crc32(block);
+    if(target_block == 0)
+    {
+        printf("警告: 正在修改超级块\n");
+    }
     if(block->__write_cache_block != -1 && block->__write_cache_block != target_block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("Cached write : %ld\n", block->__write_cache_block);
+        // printf("Cached write : %ld\n", block->__write_cache_block);
     }
     block->__write_cache_block = target_block;
     memcpy(block->__write_cache, block->current_block_data, block->blocksize);
@@ -129,7 +135,7 @@ FS_STATUS fs_block_sync(fs_block_description_t *block)
     {
         fseek(block->fp, block->__write_cache_block * block->blocksize, SEEK_SET);
         fwrite(block->__write_cache, block->blocksize, 1, block->fp);
-        printf("Cached write : %ld\n", block->__write_cache_block);
+        // printf("Cached write : %ld\n", block->__write_cache_block);
         block->__write_cache_block = -1;
     }
     return true;

@@ -31,6 +31,7 @@ typedef struct fs_general_file_handle_t // 文件句柄
     uint32_t block_current;          // 当前读写的物理块号
     uint32_t block_offset;           // 当前读写的块内偏移
     uint32_t pos_current;            // 当前读写的位置(相对于文件第一个字节)
+    bool changed;
 } fs_general_file_handle_t;
 
 

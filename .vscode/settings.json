@@ -65,6 +65,7 @@
         "fs_block_empty_bitmap.h": "c",
         "fs_block_free_bitmap.h": "c",
         "fs_general_file.h": "c",
-        "fs_tree.h": "c"
+        "fs_tree.h": "c",
+        "fs_file.h": "c"
     }
 }

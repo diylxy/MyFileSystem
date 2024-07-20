@@ -85,7 +85,7 @@ FS_STATUS fs_free_bitmap_format(fs_block_description_t *block, fs_superblock_t *
                 block->current_block_data[sizeof(fs_block_free_bitmap_header_t) + j] = 0xFF;
             }
             block->current_block_data[sizeof(fs_block_free_bitmap_header_t) + j] = (1 << bit_resv) - 1;
-            printf("total_block: %d\n", (1 << bit_resv) - 1);
+            printf("空闲块位示图: 文件系统头已占用%d个块\n", (1 << bit_resv) - 1);
         }
         fs_block_write(block, i);
     }

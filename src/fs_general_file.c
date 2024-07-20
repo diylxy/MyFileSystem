@@ -12,6 +12,7 @@ FS_STATUS fs_general_file_open(fs_block_description_t *block, fs_superblock_t *s
     handle->block_current = blocknum;
     handle->block_offset = 0;
     handle->pos_current = 0;
+    handle->changed = false;
     return true;
 }
 
@@ -155,6 +156,8 @@ uint32_t fs_general_file_write(fs_block_description_t *block, fs_superblock_t *s
     {
         handle->header.file_size = handle->pos_current;
     }
+    if (write_size > 0)
+        handle->changed = true;
     return write_size;
 }
 
@@ -224,7 +227,11 @@ FS_STATUS fs_general_file_sync(fs_block_description_t *block, fs_general_file_ha
     if (fs_block_read(block, handle->block_first) == false)
         return false;
     fs_general_file_header_t *file_header = (fs_general_file_header_t *)(block->current_block_data + sizeof(fs_general_file_block_header_t));
-    handle->header.modify_time = time(NULL);
+    if (handle->changed)
+    {
+        handle->changed = false;
+        handle->header.modify_time = time(NULL);
+    }
     *file_header = handle->header;
     if (fs_block_write(block, handle->block_first) == false)
         return false;
