@@ -1,5 +1,5 @@
 #include <fs_block.h>
-#define BLOCK_DEBUG 0
+
 FS_STATUS fs_block_check_crc32(fs_block_description_t *block)
 {
     uint32_t crc32_origin;

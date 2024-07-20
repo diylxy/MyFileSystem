@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <fs_typedefs.h>
 
+#define BLOCK_DEBUG 0                   // 1：开启块读写的调试信息
+
 typedef bool FS_STATUS;
 
 #define FS_SUPERBLOCK_HEADER 0x55AAAA00
