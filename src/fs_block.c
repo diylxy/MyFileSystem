@@ -24,7 +24,7 @@ FS_STATUS fs_block_fill_crc32(fs_block_description_t *block)
     return true;
 }
 
-FS_STATUS fs_block_open(fs_block_description_t *block, char *filename, uint32_t blocksize)
+FS_STATUS fs_block_open(fs_block_description_t *block, const char *filename, uint32_t blocksize)
 {
     TRUE_THEN_RETURN_FALSE(block == NULL);
     block->fp = fopen(filename, "rb+");

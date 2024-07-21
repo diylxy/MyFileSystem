@@ -3,7 +3,7 @@
 #include <fs_common.h>
 #include <fs_crc32.h>
 
-FS_STATUS fs_block_open(fs_block_description_t *block, char *filename, uint32_t blocksize);
+FS_STATUS fs_block_open(fs_block_description_t *block, const char *filename, uint32_t blocksize);
 
 FS_STATUS fs_block_reset_blocksize(fs_block_description_t *block, uint32_t blocksize);
 
