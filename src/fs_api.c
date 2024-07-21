@@ -214,9 +214,54 @@ SFS_EXPORT_API void sfs_tree_rewind(simplefs_dir_t *fp)
     fs_general_file_rewind(fp->disk->block, fp->fp);
 }
 
+static bool rmdir_recursive_internal(simplefs_disk_handle_t *drive, uint32_t start_block)
+{
+    fs_general_file_handle_t handle;
+    fs_general_file_open(drive->block, drive->superblock, &handle, start_block);
+    if(handle.header.magic == FS_BLOCK_TREE_MAGIC)
+    {
+        uint32_t entry;
+        fs_general_file_read(drive->block, drive->superblock, &handle, &entry, sizeof(uint32_t));
+        while(fs_general_file_read(drive->block, drive->superblock, &handle, &entry, sizeof(uint32_t)) == sizeof(uint32_t))
+        {
+            if(entry == 0)
+                continue;
+            if(rmdir_recursive_internal(drive, entry) == false)
+                return false;
+        }
+        fs_general_file_remove(drive->block, drive->superblock, start_block);
+    }
+    else if(handle.header.magic == FS_BLOCK_FILE_MAGIC)
+    {
+        fs_general_file_remove(drive->block, drive->superblock, start_block);
+    }
+    else
+    {
+        return false;
+    }
+    return true;
+}
 SFS_EXPORT_API bool sfs_tree_rmdir(simplefs_disk_handle_t *drive, const char *path)
 {
-    return fs_tree_rmdir_by_path(drive, path);
+    fs_tree_handle_t *handle = fs_tree_open(drive, path);
+    if(handle == NULL)
+        return false;
+    uint32_t block = handle->block_first;
+    uint32_t parent;
+    fs_general_file_read(drive->block, drive->superblock, handle, &parent, sizeof(uint32_t));
+    fs_tree_close(drive, handle);
+    if(parent == 0)
+        return false;
+    if(rmdir_recursive_internal(drive, block))
+    {
+        fs_tree_handle_t parent_handle;
+        if(fs_general_file_open(drive->block, drive->superblock, &parent_handle, parent) == false)
+            return false;
+        if(fs_tree_remove_entry(drive, &parent_handle, block) == false) return false;
+        fs_general_file_close(drive->block, &parent_handle);
+        return true;
+    }
+    return false;
 }
 
 SFS_EXPORT_API bool sfs_remove(simplefs_disk_handle_t *drive, const char *path)

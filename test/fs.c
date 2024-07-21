@@ -31,9 +31,6 @@ int main()
     printf("创建文件 /testdir/123/test5.bin\n");
     sfs_fcreate(fs, "/testdir/123/test5.bin");
     // 删除目录
-    sfs_remove(fs, "/testdir/12312/test5.bin");
-    printf("删除文件 /testdir/123/test5.bin\n");
-    sfs_remove(fs, "/testdir/123/test5.bin");
     printf("删除目录 /testdir/123\n");
     sfs_tree_rmdir(fs, "/testdir/123");
     // 遍历目录
