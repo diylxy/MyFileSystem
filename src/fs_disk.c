@@ -61,7 +61,7 @@ fs_handle_t *fs_disk_open(const char *device, bool *need_format)
         free(fs->block);
         return NULL;
     }
-    fs_block_open(fs->block, "disk", 512);
+    fs_block_open(fs->block, device, 512);
     *need_format = fs_superblock_getinfo(fs->block, fs->superblock) == false;
     if (*need_format == false)
     {
