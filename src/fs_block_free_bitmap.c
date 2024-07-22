@@ -50,7 +50,9 @@ FS_STATUS fs_free_bitmap_allocate(fs_block_description_t *block, fs_superblock_t
                 first_zero_blocknum = i + first_not_ff * 8 + (fbmap_current - 1) * cap;
                 if (first_zero_blocknum > superblock->block_total)
                 {
+#if BLOCK_DEBUG
                     printf("No free block\n");
+#endif
                     return false; // 无可用空间
                 }
                 bmp_first_no_ff |= 1 << i;
@@ -61,7 +63,9 @@ FS_STATUS fs_free_bitmap_allocate(fs_block_description_t *block, fs_superblock_t
             }
         }
     }
+#if BLOCK_DEBUG
     printf("No free block\n");
+#endif
     return false;
 }
 
@@ -96,7 +100,9 @@ FS_STATUS fs_free_bitmap_format(fs_block_description_t *block, fs_superblock_t *
                 block->current_block_data[sizeof(fs_block_free_bitmap_header_t) + j] = 0xFF;
             }
             block->current_block_data[sizeof(fs_block_free_bitmap_header_t) + j] = (1 << bit_resv) - 1;
+#if BLOCK_DEBUG
             printf("空闲块位示图: 文件系统头已占用%d个块\n", (1 << bit_resv) - 1);
+#endif
         }
         fs_block_write(block, i);
     }

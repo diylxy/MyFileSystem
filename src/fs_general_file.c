@@ -124,7 +124,9 @@ uint32_t fs_general_file_write(fs_block_description_t *block, fs_superblock_t *s
             if (block_header->block_next == 0)
             {
                 // 申请新块
+#if BLOCK_DEBUG
                 printf("Allocating new block\n");
+#endif
                 uint32_t free_block = -1;
                 fs_block_write(block, handle->block_current); // 暂存当前数据区
                 if (fs_free_bitmap_allocate(block, superblock, &free_block) == false)
