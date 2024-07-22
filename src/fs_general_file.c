@@ -261,8 +261,9 @@ FS_STATUS fs_general_file_remove(fs_block_description_t *block, fs_superblock_t 
     fs_block_write(block, blocknum);
     while (blocknum != 0)
     {
-        fs_free_bitmap_free(block, superblock, blocknum);
+        uint32_t blocknum_to_free = blocknum;
         blocknum = header->block_next;
+        fs_free_bitmap_free(block, superblock, blocknum_to_free);
         TRUE_THEN_RETURN_FALSE(fs_block_read(block, blocknum) == false);
     }
     return true;
@@ -282,6 +283,9 @@ FS_STATUS fs_general_file_trim_size_to_current_position(fs_block_description_t *
     }
     if (handle->header.file_size != handle->pos_current)
     {
+        TRUE_THEN_RETURN_FALSE(fs_block_read(block, handle->block_current) == false);
+        header->block_next = 0;
+        fs_block_write(block, handle->block_current);
         handle->header.file_size = handle->pos_current;
         handle->changed = true;
     }
