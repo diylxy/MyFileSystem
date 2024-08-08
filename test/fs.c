@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <fs_api.h>
-
+#include <time.h>
+void printTimeStamp(uint32_t timestamp)
+{
+    time_t t = timestamp;
+    struct tm *tm = localtime(&t);
+    printf("%d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+}
 #define DISK_SIZE (1024 * 1024 * 4)
 #define BLOCK_SIZE 1024
 int main(int argc, char *argv[])
@@ -23,6 +29,7 @@ int main(int argc, char *argv[])
     }
     printf("虚拟块设备已打开\n");
     printf("可用空间：%d\n", sfs_diskfree(fs));
+    printf("卷标：%s\n", fs->superblock->volume_name);
     // // 创建文件
     // printf("创建文件\n");
     // sfs_fcreate(fs, "/测试1.bin");
@@ -45,7 +52,7 @@ int main(int argc, char *argv[])
     simplefs_dir_t *root;
     root = sfs_dir_open(fs, argv[2]);
     simplefs_tree_read_result_t tree_walk_result;
-    printf("  类型      块号      创建时间    修改时间      大小    文件名\n");
+    printf("  类型      块号               创建时间                   修改时间                 大小        文件名\n");
     while(sfs_tree_readdir(root, &tree_walk_result))
     {
         if(tree_walk_result.is_dir)
@@ -56,10 +63,11 @@ int main(int argc, char *argv[])
         {
             printf("[FILE] ");
         }
-        printf("%11u ", tree_walk_result.sub_file_handle.block_first);
-        printf("%11u ", tree_walk_result.sub_file_handle.header.create_time);
-        printf("%11u ", tree_walk_result.sub_file_handle.header.modify_time);
-        printf("%11u ", tree_walk_result.sub_file_handle.header.file_size);
+        printf("%11u        ", tree_walk_result.sub_file_handle.block_first);
+        printTimeStamp(tree_walk_result.sub_file_handle.header.create_time);
+        printf("          ");
+        printTimeStamp(tree_walk_result.sub_file_handle.header.modify_time);
+        printf("%11u        ", tree_walk_result.sub_file_handle.header.file_size);
         printf("%s\n", tree_walk_result.name);
     }
     printf("关闭文件\n");
